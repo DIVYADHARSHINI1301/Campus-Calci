@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, doc, setDoc, updateDoc, getDoc, deleteField, deleteDoc, onSnapshot } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase/config";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import AdminNavbar from "../components/AdminNavbar";
 import ElectiveStreamsManager from "../components/ElectiveStreamsManager";
@@ -24,6 +25,7 @@ function Toast({ msg, onConfirm, onCancel }) {
 }
 
 export default function Admin() {
+  const navigate = useNavigate();
   // ... (Keep all your existing state hooks exactly as they are) ...
   const [user, setUser] = useState(null);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem("darkMode") === "true");
@@ -58,6 +60,7 @@ export default function Admin() {
   const [copyFromSem, setCopyFromSem] = useState("");
   const [feedbacks, setFeedbacks] = useState([]);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [studentCount, setStudentCount] = useState(0);
 
   // ... (Keep all your useEffect and logic functions exactly as they are) ...
   useEffect(() => {
@@ -88,6 +91,14 @@ export default function Admin() {
   };
   
   useEffect(() => { fetchFeedbacks(); }, []);
+  
+  const fetchStudentCount = async () => {
+    const snap = await getDocs(collection(db, "users"));
+    const count = snap.docs.filter(d => d.data().role !== "admin").length;
+    setStudentCount(count);
+  };
+  
+  useEffect(() => { fetchStudentCount(); }, []);
   
   useEffect(() => {
     if (!selectedCollege) return;
@@ -436,29 +447,46 @@ export default function Admin() {
   const chipCls = (active) => `px-4 py-1.5 rounded-xl text-sm font-medium border transition-all cursor-pointer shadow-sm ${active ? "bg-blue-600 text-white border-blue-600 scale-105" : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-gray-300 hover:border-blue-400 dark:hover:border-blue-500"}`;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0F172A] dark:text-white pb-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 dark:text-white pb-24">
       <AdminNavbar user={user} darkMode={darkMode} setDarkMode={setDarkMode} />
       
-      <div className="max-w-4xl mx-auto p-6 space-y-8 mt-4">
-        <header className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-extrabold tracking-tight">Admin Console</h2>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Manage institutional data and curriculum.</p>
-          </div>
-          {loading && <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />}
-        </header>
+      <div className="max-w-7xl mx-auto px-6 pt-6 space-y-6">
 
         {msg.text && (
-          <div className={`px-4 py-3 rounded-2xl text-sm font-bold shadow-sm animate-in slide-in-from-top-2 ${msg.type === "error" ? "bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-300" : "bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300"}`}>
-             {msg.text}
+          <div className={`px-6 py-4 rounded-2xl text-sm font-bold shadow-xl border-2 animate-in slide-in-from-top-2 backdrop-blur-sm ${
+            msg.type === "error" 
+              ? "bg-red-50/90 dark:bg-red-950/90 text-red-700 dark:text-red-300 border-red-300 dark:border-red-700" 
+              : "bg-emerald-50/90 dark:bg-emerald-950/90 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700"
+          }`}>
+            <div className="flex items-center gap-3">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                msg.type === "error" ? "bg-red-500" : "bg-emerald-500"
+              }`}>
+                {msg.type === "error" ? (
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
+              {msg.text}
+            </div>
           </div>
         )}
 
         {/* Step 1: College */}
-        <section className="bg-white dark:bg-gray-900/50 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-[2rem] shadow-xl shadow-gray-200/50 dark:shadow-none p-6 space-y-5">
-          <div className="flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center font-bold">1</span>
-            <h3 className="font-bold text-lg">Institutions</h3>
+        <section className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl shadow-lg p-8 space-y-6 transition-all">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md">
+              <span className="text-xl font-black text-white">1</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-xl text-gray-900 dark:text-white">Institutions</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mt-0.5">Manage colleges and universities</p>
+            </div>
           </div>
           <form onSubmit={addCollege} className="space-y-3">
             <div className="flex gap-3">
@@ -552,9 +580,25 @@ export default function Admin() {
                       {c.logo && <img src={c.logo} alt={c.name} className="w-5 h-5 object-contain" />}
                       {c.name}
                     </button>
-                    <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-1">
-                      <button onClick={() => setEditCollege({ id: c.id, name: c.name, logo: c.logo || "" })} className="p-1 hover:bg-blue-100 dark:hover:bg-blue-900 rounded text-[10px]">✏️</button>
-                      <button onClick={() => deleteCollege(c)} className="p-1 hover:bg-red-100 dark:hover:bg-red-900 rounded text-[10px]">🗑️</button>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-1">
+                      <button 
+                        onClick={() => setEditCollege({ id: c.id, name: c.name, logo: c.logo || "" })} 
+                        className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                        title="Edit"
+                      >
+                        <svg className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button 
+                        onClick={() => deleteCollege(c)} 
+                        className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                        title="Delete"
+                      >
+                        <svg className="w-3.5 h-3.5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                 )}
@@ -565,11 +609,16 @@ export default function Admin() {
 
         {/* Step 2: Department */}
         {selectedCollege && (
-          <section className="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-[2rem] shadow-xl shadow-gray-200/50 dark:shadow-none p-6 space-y-5 animate-in slide-in-from-bottom-4">
+          <section className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl shadow-lg p-8 space-y-6 animate-in slide-in-from-bottom-4 transition-all">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 flex items-center justify-center font-bold">2</span>
-                <h3 className="font-bold text-lg">Departments <span className="text-gray-400 font-normal text-sm">at {selectedCollege.name}</span></h3>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md">
+                  <span className="text-xl font-black text-white">2</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl text-gray-900 dark:text-white">Departments</h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mt-0.5">at {selectedCollege.name}</p>
+                </div>
               </div>
             </div>
             <form onSubmit={addDept} className="flex gap-3">
@@ -582,14 +631,30 @@ export default function Admin() {
                   {editDept === d ? (
                     <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 p-1 rounded-xl ring-1 ring-blue-500">
                       <input value={editDeptVal} onChange={(e) => setEditDeptVal(e.target.value)} className="bg-transparent px-2 py-1 text-sm outline-none w-24 font-medium" />
-                      <button onClick={saveEditDept} className="p-1 text-[10px] bg-emerald-500 text-white rounded">Save</button>
+                      <button onClick={saveEditDept} className="px-2 py-1 text-xs bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-bold transition-colors">Save</button>
                     </div>
                   ) : (
                     <>
                       <button onClick={() => { setDept(d); setYear(null); setSem(null); }} className={chipCls(selectedDept === d)}>{d}</button>
-                      <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                         <button onClick={() => { setEditDept(d); setEditDeptVal(d); }} className="text-[10px]">✏️</button>
-                         <button onClick={() => deleteDept(d)} className="text-[10px]">🗑️</button>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={() => { setEditDept(d); setEditDeptVal(d); }} 
+                          className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <svg className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button 
+                          onClick={() => deleteDept(d)} 
+                          className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <svg className="w-3.5 h-3.5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
                       </div>
                     </>
                   )}
@@ -601,10 +666,15 @@ export default function Admin() {
 
         {/* Step 2.5: Academic Years */}
         {selectedDept && (
-          <section className="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-[2rem] p-6 space-y-5 animate-in slide-in-from-bottom-4">
-             <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 flex items-center justify-center font-bold">2.5</span>
-                <h3 className="font-bold text-lg">Regulation / Academic Years</h3>
+          <section className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl shadow-lg p-8 space-y-6 animate-in slide-in-from-bottom-4 transition-all">
+             <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md">
+                  <span className="text-lg font-black text-white">2.5</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl text-gray-900 dark:text-white">Academic Years</h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mt-0.5">Regulation and batch management</p>
+                </div>
              </div>
              <form onSubmit={addYear} className="flex gap-3">
                 <input value={newYear} onChange={(e) => setNewYear(e.target.value)} placeholder="Starting Year (e.g. 2024)" className={inputCls} type="number" />
@@ -616,7 +686,15 @@ export default function Admin() {
                     <button onClick={() => { setYear(y); setSem(null); }} className={chipCls(selectedYear === y)}>
                        {y} - {parseInt(y) + 4}
                     </button>
-                    <button onClick={() => deleteYear(y)} className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-600">🗑️</button>
+                    <button 
+                      onClick={() => deleteYear(y)} 
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg"
+                      title="Delete"
+                    >
+                      <svg className="w-3.5 h-3.5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
                  </div>
                ))}
              </div>
@@ -625,10 +703,15 @@ export default function Admin() {
 
         {/* Step 3: Semester */}
         {selectedYear && (
-          <section className="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-[2rem] p-6 space-y-5 animate-in slide-in-from-bottom-4">
-            <div className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center font-bold">3</span>
-              <h3 className="font-bold text-lg">Curriculum Structure</h3>
+          <section className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl shadow-lg p-8 space-y-6 animate-in slide-in-from-bottom-4 transition-all">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md">
+                <span className="text-xl font-black text-white">3</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-xl text-gray-900 dark:text-white">Curriculum Structure</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-0.5">Semester organization</p>
+              </div>
             </div>
             <form onSubmit={addSem} className="flex gap-3">
               <input value={newSem} onChange={(e) => setNewSem(e.target.value)} placeholder="e.g. Semester 1" className={inputCls} />
@@ -640,14 +723,30 @@ export default function Admin() {
                    {editSem === s ? (
                      <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 p-1 rounded-xl ring-1 ring-blue-500">
                        <input value={editSemVal} onChange={(e) => setEditSemVal(e.target.value)} className="bg-transparent px-2 py-1 text-sm outline-none w-24 font-medium" />
-                       <button onClick={saveEditSem} className="p-1 text-[10px] bg-emerald-500 text-white rounded">Save</button>
+                       <button onClick={saveEditSem} className="px-2 py-1 text-xs bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-bold transition-colors">Save</button>
                      </div>
                    ) : (
                      <>
                        <button onClick={() => setSem(s)} className={chipCls(selectedSem === s)}>{s}</button>
-                       <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                         <button onClick={() => { setEditSem(s); setEditSemVal(s); }} className="text-[10px]">✏️</button>
-                         <button onClick={() => deleteSem(s)} className="text-[10px]">🗑️</button>
+                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <button 
+                           onClick={() => { setEditSem(s); setEditSemVal(s); }} 
+                           className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                           title="Edit"
+                         >
+                           <svg className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                           </svg>
+                         </button>
+                         <button 
+                           onClick={() => deleteSem(s)} 
+                           className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                           title="Delete"
+                         >
+                           <svg className="w-3.5 h-3.5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                           </svg>
+                         </button>
                        </div>
                      </>
                    )}
@@ -659,16 +758,21 @@ export default function Admin() {
 
         {/* Step 4: Subjects - Using a cleaner Data Table style */}
         {selectedSem && (
-          <section className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-[2rem] overflow-hidden animate-in slide-in-from-bottom-4 shadow-2xl">
-            <div className="p-6 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-lg flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold shadow-lg shadow-blue-500/40">4</span>
-                  Course Catalog
-                </h3>
+          <section className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl overflow-hidden animate-in slide-in-from-bottom-4 shadow-lg transition-all">
+            <div className="p-8 border-b border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-800">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md">
+                    <span className="text-xl font-black text-white">4</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-xl text-gray-900 dark:text-white">Course Catalog</h3>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mt-0.5">Subject management</p>
+                  </div>
+                </div>
                 <button
                   onClick={() => setShowCopyModal(true)}
-                  className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg shadow-purple-500/20 transition-all active:scale-95 flex items-center gap-2"
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-md transition-all active:scale-95 flex items-center gap-2"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -739,11 +843,25 @@ export default function Admin() {
                             <span className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-lg font-bold">{s.credits}</span>
                           </td>
                           <td className="px-4 py-4 text-right">
-                            <div className="flex justify-end gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={() => setEditSubject({ index: i, name: s.name, credits: s.credits, courseCode: s.courseCode || "" })}
-                                className="text-blue-500 hover:text-blue-700 text-xs font-bold uppercase tracking-tight">Edit</button>
-                              <button onClick={() => deleteSubject(s.name)}
-                                className="text-red-500 hover:text-red-700 text-xs font-bold uppercase tracking-tight">Delete</button>
+                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button 
+                                onClick={() => setEditSubject({ index: i, name: s.name, credits: s.credits, courseCode: s.courseCode || "" })}
+                                className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                                title="Edit"
+                              >
+                                <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </button>
+                              <button 
+                                onClick={() => deleteSubject(s.name)}
+                                className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                                title="Delete"
+                              >
+                                <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
                             </div>
                           </td>
                         </>
@@ -759,24 +877,34 @@ export default function Admin() {
         )}
 
         {/* Step 5: Elective Streams Management */}
-        <section className="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-[2rem] p-6 space-y-5 animate-in slide-in-from-bottom-4">
-          <div className="flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center font-bold">5</span>
-            <h3 className="font-bold text-lg">Elective & Honors Streams</h3>
+        <section className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl shadow-lg p-8 space-y-6 animate-in slide-in-from-bottom-4 transition-all">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md">
+              <span className="text-xl font-black text-white">5</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-xl text-gray-900 dark:text-white">Elective & Honors Streams</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mt-0.5">Professional elective management</p>
+            </div>
           </div>
           <ElectiveStreamsManager />
         </section>
 
         {/* Step 6: Feedback Management */}
-        <section className="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-[2rem] p-6 space-y-5 animate-in slide-in-from-bottom-4">
+        <section className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl shadow-lg p-8 space-y-6 animate-in slide-in-from-bottom-4 transition-all">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-lg bg-pink-100 dark:bg-pink-900/30 text-pink-600 flex items-center justify-center font-bold">6</span>
-              <h3 className="font-bold text-lg">User Feedback</h3>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md">
+                <span className="text-xl font-black text-white">6</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-xl text-gray-900 dark:text-white">User Feedback</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-0.5">Student suggestions and reports</p>
+              </div>
             </div>
             <button
               onClick={() => setShowFeedbackModal(true)}
-              className="bg-pink-600 hover:bg-pink-700 text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-pink-500/20 transition-all active:scale-95"
+              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-6 py-2.5 rounded-lg shadow-md transition-all active:scale-95"
             >
               View All ({feedbacks.length})
             </button>
@@ -800,6 +928,41 @@ export default function Admin() {
           </div>
         </section>
       </div>
+
+      {/* Sticky Footer */}
+      <footer className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 shadow-lg z-40">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                  <div className="absolute inset-0 w-3 h-3 rounded-full bg-green-500 animate-ping"></div>
+                </div>
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Admin Console Active</span>
+              </div>
+              <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-gray-100 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+                <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <span className="font-bold text-lg text-gray-900 dark:text-white">{studentCount}</span>
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Students</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate("/student-records")}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-6 py-2.5 rounded-lg shadow-md transition-all active:scale-95 flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <span>View Students</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </footer>
 
       <Toast
         msg={toast?.message}

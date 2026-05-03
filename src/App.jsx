@@ -8,6 +8,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
+import StudentRecords from "./pages/StudentRecords";
 import LoadingScreen from "./components/LoadingScreen";
 import UpdateNotification from "./components/UpdateNotification";
 import { useVersionCheck } from "./hooks/useVersionCheck";
@@ -141,6 +142,19 @@ export default function App() {
               requiredRole="admin"
             >
               <Admin />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/student-records"
+          element={
+            <ProtectedRoute
+              user={user}
+              role={role}
+              requiredRole="admin"
+            >
+              <StudentRecords darkMode={darkMode} setDarkMode={setDarkMode} />
             </ProtectedRoute>
           }
         />
