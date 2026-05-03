@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CGPA AI | Pill Design Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00e5ff;
+            --accent: #6e00ff;
+            --bot-white: #ffffff;
+            --pill-bg: rgba(255, 255, 255, 0.05);
+            --transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+
+        body {
+            background: #050505;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            overflow-x: hidden;
+            /* Animated background Mesh */
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,15%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 100%, hsla(225,39%,10%,1) 0, transparent 50%);
+        }
+
+        /* --- THE PILL CONTAINER --- */
+        .pill-wrapper {
+            width: 100%;
+            max-width: 450px;
+            background: var(--pill-bg);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 60px; /* Strong Pill Shape */
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        /* --- THE REALISTIC ROBOT --- */
+        .bot-container {
+            height: 180px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .bot {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            animation: breathe 4s ease-in-out infinite;
+        }
+
+        /* Head & Ears */
+        .bot-head {
+            width: 100px; height: 80px;
+            background: var(--bot-white);
+            border-radius: 35px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+            transition: var(--transition);
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.1);
+        }
+
+        .ear {
+            position: absolute; width: 10px; height: 30px;
+            background: #cbd5e1; top: 10px; border-radius: 10px;
+            transition: var(--transition);
+        }
+        .ear-l { left: -5px; transform: rotate(-20deg); }
+        .ear-r { right: -5px; transform: rotate(20deg); }
+
+        .screen {
+            width: 75px; height: 50px;
+            background: #111; border-radius: 20px;
+            position: absolute; top: 15px; left: 12.5px;
+            display: flex; justify-content: center; align-items: center; gap: 15px;
+        }
+
+        .eye {
+            width: 15px; height: 15px;
+            background: var(--primary); border-radius: 50%;
+            box-shadow: 0 0 15px var(--primary);
+            transition: 0.3s;
+        }
+
+        /* Torso */
+        .bot-body {
+            width: 80px; height: 70px;
+            background: var(--bot-white);
+            border-radius: 30px 30px 40px 40px;
+            margin: -5px auto 0;
+            position: relative;
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Arms */
+        .arm {
+            position: absolute; top: 85px;
+            width: 25px; height: 60px;
+            background: var(--bot-white);
+            border-radius: 20px;
+            transform-origin: top center;
+            transition: var(--transition);
+        }
+        .arm-l { left: 0px; }
+        .arm-r { right: 0px; }
+
+        /* --- DYNAMIC STATES --- */
+        @keyframes breathe {
+            0%, 100% { transform: translateX(-50%) translateY(0) scale(1); }
+            50% { transform: translateX(-50%) translateY(-10px) scale(1.02); }
+        }
+
+        /* State: Waving */
+        .is-typing .arm-r {
+            animation: wave 1.2s infinite ease-in-out;
+        }
+        @keyframes wave {
+            0%, 100% { transform: rotate(-10deg); }
+            50% { transform: rotate(-140deg); }
+        }
+
+        /* State: Peek-a-boo */
+        .is-hidden .bot-head { transform: translateY(15px) rotateX(20deg); }
+        .is-hidden .arm-l { transform: translateY(-60px) translateX(25px) rotate(140deg); z-index: 11; }
+        .is-hidden .arm-r { transform: translateY(-60px) translateX(-25px) rotate(-140deg); z-index: 11; }
+        .is-hidden .eye { height: 2px; width: 18px; border-radius: 2px; }
+        .is-hidden .ear-l { transform: rotate(-45deg) translateY(5px); }
+        .is-hidden .ear-r { transform: rotate(45deg) translateY(5px); }
+
+        /* --- PILL INPUTS --- */
+        .input-pill {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        input {
+            width: 100%;
+            padding: 18px 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50px; /* Perfect Pill */
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            background: rgba(0, 229, 255, 0.05);
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 10px 30px rgba(110, 0, 255, 0.3);
+        }
+
+        .login-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 40px rgba(110, 0, 255, 0.5);
+        }
+
+        h2 { font-weight: 700; margin-bottom: 5px; letter-spacing: -1px; }
+        p { color: #888; font-size: 0.9rem; margin-bottom: 30px; }
+
+        /* --- MOBILE OPTIMIZATION --- */
+        @media (max-width: 400px) {
+            .pill-wrapper { border-radius: 40px; padding: 30px 20px; }
+            .bot { transform: translateX(-50%) scale(0.9); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="pill-wrapper">
+        <div class="bot-container" id="bot-stage">
+            <div class="bot">
+                <div class="ear ear-l"></div>
+                <div class="ear ear-r"></div>
+                <div class="bot-head">
+                    <div class="screen">
+                        <div class="eye"></div>
+                        <div class="eye"></div>
+                    </div>
+                </div>
+                <div class="bot-body"></div>
+                <div class="arm arm-l"></div>
+                <div class="arm arm-r"></div>
+            </div>
+        </div>
+
+        <h2>Scholar Login</h2>
+        <p>AI-Powered CGPA Analytics</p>
+
+        <form onsubmit="return false;">
+            <div class="input-pill">
+                <input type="text" id="user-field" placeholder="Student Identity" required autocomplete="off">
+            </div>
+            <div class="input-pill">
+                <input type="password" id="pass-field" placeholder="Security Passcode" required>
+            </div>
+            <button type="submit" class="login-btn">Enter Portal</button>
+        </form>
+
+        <div style="margin-top: 25px; font-size: 0.8rem; color: #555;">
+            SYSTEM STATUS: <span style="color: var(--primary); font-weight: bold;">ACTIVE</span>
+        </div>
+    </div>
+
+    <script>
+        const stage = document.getElementById('bot-stage');
+        const userField = document.getElementById('user-field');
+        const passField = document.getElementById('pass-field');
+        const eyes = document.querySelectorAll('.eye');
+
+        // 1. "Hi" Gesture on Username Focus
+        userField.addEventListener('focus', () => {
+            stage.classList.add('is-typing');
+        });
+
+        userField.addEventListener('blur', () => {
+            stage.classList.remove('is-typing');
+            eyes.forEach(e => e.style.transform = `translateX(0)`);
+        });
+
+        // 2. Peek-a-boo Gesture on Password Focus
+        passField.addEventListener('focus', () => {
+            stage.classList.add('is-hidden');
+        });
+
+        passField.addEventListener('blur', () => {
+            stage.classList.remove('is-hidden');
+        });
+
+        // 3. Eye Movement follow typing (Advanced)
+        userField.addEventListener('input', (e) => {
+            const move = Math.min(e.target.value.length * 1.5, 12);
+            eyes.forEach(eye => {
+                eye.style.transform = `translateX(${move - 6}px)`;
+            });
+        });
+    </script>
+</body>
+</html>
