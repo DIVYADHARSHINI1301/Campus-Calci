@@ -40,6 +40,9 @@ export default function Dashboard({ darkMode, setDarkMode }) {
   const [cgpaMessage, setCgpaMessage] = useState("");
   const [showCgpaDetails, setShowCgpaDetails] = useState(false);
   const [electiveSubjects, setElectiveSubjects] = useState([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     let unsubCollege = null;
@@ -837,7 +840,7 @@ export default function Dashboard({ darkMode, setDarkMode }) {
                 </div>
               </div>
               <div className="w-full min-h-[300px] h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
+                {mounted && <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={sgpaList.map((item, idx) => {
                     const semestersUpToThis = sgpaList.slice(0, idx + 1);
                     return { ...item, cgpa: parseFloat(calculateCGPA(semestersUpToThis)) };
@@ -883,7 +886,7 @@ export default function Dashboard({ darkMode, setDarkMode }) {
                       isAnimationActive={true}
                     />
                   </LineChart>
-                </ResponsiveContainer>
+                </ResponsiveContainer>}
               </div>
             </div>
 

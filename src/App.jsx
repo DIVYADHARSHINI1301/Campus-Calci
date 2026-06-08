@@ -50,6 +50,7 @@ export default function App() {
     const unsub = onAuthStateChanged(auth, async (u) => {
       if (u) {
         try {
+          await u.getIdToken(); // ensure auth token is ready before Firestore
           const snap = await getDoc(doc(db, "users", u.uid));
 
           if (snap.exists()) {
