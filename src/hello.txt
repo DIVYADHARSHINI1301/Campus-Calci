@@ -1,1 +1,2 @@
 Applied Science Laboratory Problem Solving using C++ Digital Logic Design and Computer Architecture Application Development Practices Mathematics I Mandatory Course: Induction Programme Engineering Biology Heritage of Tamils  Applied
+hello i am divya
